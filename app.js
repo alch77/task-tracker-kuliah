@@ -144,22 +144,36 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Langkah 4 — delegation: checkbox + hapus ditangani di <ul> (berlaku untuk item baru).
-daftar.addEventListener("change", (e) => {
+// Langkah v2-4 — delegation: PATCH selesai & DELETE (204) lewat <ul>.
+// State diperbarui dari respons server, lalu render().
+daftar.addEventListener("change", async (e) => {
   const id = e.target.dataset.id;
   if (e.target.type !== "checkbox" || !id) return;
   const item = tugas.find((t) => t.id === id);
-  if (item) {
-    item.selesai = e.target.checked;
+  if (!item) return;
+  try {
+    const baru = await api(`/tugas/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ selesai: e.target.checked }),
+    });
+    Object.assign(item, baru);
+    render();
+  } catch (err) {
+    errorEl.textContent = err.message;
     render();
   }
 });
 
-daftar.addEventListener("click", (e) => {
+daftar.addEventListener("click", async (e) => {
   const btn = e.target.closest(".hapus");
   if (!btn) return;
-  tugas = tugas.filter((t) => t.id !== btn.dataset.id);
-  render();
+  try {
+    await api(`/tugas/${btn.dataset.id}`, { method: "DELETE" });
+    tugas = tugas.filter((t) => t.id !== btn.dataset.id);
+    render();
+  } catch (err) {
+    errorEl.textContent = err.message;
+  }
 });
 
 // Langkah 5 — filter Semua/Aktif/Selesai, tombol aktif berkelaas on.
