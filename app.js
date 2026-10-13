@@ -12,13 +12,28 @@ const counterEl = document.getElementById("counter");
 const kosongEl = document.getElementById("kosong");
 const filterBtns = document.querySelectorAll("[data-filter]");
 
+const KEY = "task-tracker-tugas";
 let tugas = []; // {id, judul, matkul, deadline, selesai}
+try {
+  tugas = JSON.parse(localStorage.getItem(KEY)) || [];
+} catch {
+  tugas = [];
+}
 let filter = "semua";
 
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(tugas));
+}
+
 // Langkah 2 — render: satu-satunya fungsi pembangun tampilan (textContent, aman dari XSS).
+// Langkah 5 — filter + urut deadline terdekat + counter + pesan kosong.
 function render() {
+  const tampil = tugas
+    .filter((t) => filter === "semua" || (filter === "aktif" ? !t.selesai : t.selesai))
+    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
   daftar.replaceChildren();
-  for (const t of tugas) {
+  for (const t of tampil) {
     const li = document.createElement("li");
 
     const cek = document.createElement("input");
@@ -47,10 +62,9 @@ function render() {
 
   const aktif = tugas.filter((t) => !t.selesai).length;
   counterEl.textContent = `${aktif} tugas aktif`;
-  kosongEl.hidden = tugas.length !== 0;
+  kosongEl.hidden = tampil.length !== 0;
+  filterBtns.forEach((b) => b.classList.toggle("on", b.dataset.filter === filter));
 }
-
-render();
 
 // Langkah 3 — form: submit + preventDefault, validasi, pesan error di halaman.
 form.addEventListener("submit", (e) => {
@@ -77,6 +91,7 @@ form.addEventListener("submit", (e) => {
   });
   form.reset();
   inputJudul.focus();
+  save();
   render();
 });
 
@@ -87,6 +102,7 @@ daftar.addEventListener("change", (e) => {
   const item = tugas.find((t) => t.id === id);
   if (item) {
     item.selesai = e.target.checked;
+    save();
     render();
   }
 });
@@ -95,5 +111,16 @@ daftar.addEventListener("click", (e) => {
   const btn = e.target.closest(".hapus");
   if (!btn) return;
   tugas = tugas.filter((t) => t.id !== btn.dataset.id);
+  save();
   render();
 });
+
+// Langkah 5 — filter Semua/Aktif/Selesai, tombol aktif berkelaas on.
+filterBtns.forEach((b) =>
+  b.addEventListener("click", () => {
+    filter = b.dataset.filter;
+    render();
+  })
+);
+
+render();
