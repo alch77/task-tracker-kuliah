@@ -4,12 +4,16 @@
 
 const form = document.getElementById("form-tambah");
 const inputJudul = document.getElementById("judul");
-const inputMatkul = document.getElementById("matkul");
+const selectMatkul = document.getElementById("matkul");
 const inputDeadline = document.getElementById("deadline");
 const errorEl = document.getElementById("error");
 const daftar = document.getElementById("daftar-tugas");
 const counterEl = document.getElementById("counter");
 const kosongEl = document.getElementById("kosong");
+const statusEl = document.getElementById("status");
+const errorMuatEl = document.getElementById("error-muat");
+const pesanMuatEl = document.getElementById("pesan-muat");
+const btnCobaLagi = document.getElementById("btn-coba-lagi");
 const filterBtns = document.querySelectorAll("[data-filter]");
 
 // Langkah v2-1 — api(): helper fetch JSON yang melempar Error berisi pesan server.
@@ -31,16 +35,30 @@ async function api(path, options = {}) {
 
 let tugas = []; // {id, judul, matkul, deadline, selesai}, sumber: server
 let filter = "semua";
+let status = "loading"; // loading | siap | error
+let pesanMuat = "";
 
-// Langkah 2 — render: satu-satunya fungsi pembangun tampilan (textContent, aman dari XSS).
-// Langkah 5 — filter + urut deadline terdekat + counter + pesan kosong.
+// Langkah v2-2 — render mengenal status: skeleton saat loading,
+// kotak error + coba lagi saat gagal, daftar + kosong saat siap.
 function render() {
-  const tampil = tugas
-    .filter((t) => filter === "semua" || (filter === "aktif" ? !t.selesai : t.selesai))
-    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+  statusEl.hidden = status !== "loading";
+  errorMuatEl.hidden = status !== "error";
+  if (status === "error") pesanMuatEl.textContent = pesanMuat;
 
   daftar.replaceChildren();
-  for (const t of tampil) {
+  let tampil = [];
+  if (status === "loading") {
+    for (let i = 0; i < 3; i++) {
+      const li = document.createElement("li");
+      li.className = "skeleton";
+      li.textContent = "Memuat…";
+      daftar.append(li);
+    }
+  } else if (status === "siap") {
+    tampil = tugas
+      .filter((t) => filter === "semua" || (filter === "aktif" ? !t.selesai : t.selesai))
+      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+    for (const t of tampil) {
     const li = document.createElement("li");
 
     const cek = document.createElement("input");
@@ -65,12 +83,30 @@ function render() {
 
     li.append(cek, info, hapus);
     daftar.append(li);
+    }
   }
 
   const aktif = tugas.filter((t) => !t.selesai).length;
   counterEl.textContent = `${aktif} tugas aktif`;
-  kosongEl.hidden = tampil.length !== 0;
+  kosongEl.hidden = status !== "siap" || tampil.length !== 0;
   filterBtns.forEach((b) => b.classList.toggle("on", b.dataset.filter === filter));
+}
+
+// Langkah v2-2 — isi <select> matkul dari server, pilihan user dipertahankan.
+function isiMatkul(daftarMatkul) {
+  const pilih = selectMatkul.value;
+  selectMatkul.replaceChildren();
+  const kosong = document.createElement("option");
+  kosong.value = "";
+  kosong.textContent = "— Pilih mata kuliah —";
+  selectMatkul.append(kosong);
+  for (const nama of daftarMatkul) {
+    const opt = document.createElement("option");
+    opt.value = nama;
+    opt.textContent = nama;
+    selectMatkul.append(opt);
+  }
+  selectMatkul.value = pilih;
 }
 
 // Langkah 3 — form: submit + preventDefault, validasi, pesan error di halaman.
@@ -92,7 +128,7 @@ form.addEventListener("submit", (e) => {
   tugas.push({
     id: String(Date.now()),
     judul,
-    matkul: inputMatkul.value.trim(),
+    matkul: selectMatkul.value,
     deadline,
     selesai: false,
   });
@@ -127,14 +163,23 @@ filterBtns.forEach((b) =>
   })
 );
 
-// Langkah v2-1 — muat dari server saat halaman dibuka.
-async function muatAwal() {
+// Langkah v2-2 — muat paralel: tugas & daftar matkul sekaligus via Promise.all.
+async function muat() {
+  status = "loading";
+  pesanMuat = "";
+  render();
   try {
-    tugas = await api("/tugas");
+    const [dataTugas, dataMatkul] = await Promise.all([api("/tugas"), api("/matkul")]);
+    tugas = dataTugas;
+    isiMatkul(dataMatkul);
+    status = "siap";
   } catch (err) {
-    errorEl.textContent = err.message;
+    status = "error";
+    pesanMuat = err.message;
   }
   render();
 }
 
-muatAwal();
+btnCobaLagi.addEventListener("click", muat);
+
+muat();

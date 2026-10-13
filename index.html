@@ -19,7 +19,9 @@
       </div>
       <div class="field">
         <label for="matkul">Mata kuliah</label>
-        <input type="text" id="matkul" placeholder="cth: Pemrograman Web" autocomplete="off">
+        <select id="matkul">
+          <option value="">— Pilih mata kuliah —</option>
+        </select>
       </div>
       <div class="field">
         <label for="deadline">Deadline</label>
@@ -39,7 +41,12 @@
     </div>
 
     <ul id="daftar-tugas"></ul>
-    <p id="kosong">Belum ada tugas. Tambahkan tugas kuliahmu di atas.</p>
+    <p id="status">Memuat daftar tugas…</p>
+    <div id="error-muat" hidden>
+      <p>Gagal memuat tugas: <span id="pesan-muat"></span></p>
+      <button type="button" id="btn-coba-lagi">Coba lagi</button>
+    </div>
+    <p id="kosong" hidden>Belum ada tugas. Tambahkan tugas kuliahmu di atas.</p>
   </main>
 </body>
 </html>
