@@ -51,3 +51,31 @@ function render() {
 }
 
 render();
+
+// Langkah 3 — form: submit + preventDefault, validasi, pesan error di halaman.
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const judul = inputJudul.value.trim();
+  const deadline = inputDeadline.value;
+
+  if (judul.length < 3) {
+    errorEl.textContent = "Judul minimal 3 karakter.";
+    return;
+  }
+  if (!deadline) {
+    errorEl.textContent = "Deadline wajib diisi.";
+    return;
+  }
+  errorEl.textContent = "";
+
+  tugas.push({
+    id: String(Date.now()),
+    judul,
+    matkul: inputMatkul.value.trim(),
+    deadline,
+    selesai: false,
+  });
+  form.reset();
+  inputJudul.focus();
+  render();
+});
