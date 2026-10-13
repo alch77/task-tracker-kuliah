@@ -42,6 +42,7 @@ button {
   cursor: pointer;
 }
 button:hover { background: #004c99; }
+button:disabled { background: #999; cursor: wait; }
 .error { color: #b00020; min-height: 1.2em; margin: 8px 0; }
 .toolbar {
   display: flex;

@@ -6,6 +6,7 @@ const form = document.getElementById("form-tambah");
 const inputJudul = document.getElementById("judul");
 const selectMatkul = document.getElementById("matkul");
 const inputDeadline = document.getElementById("deadline");
+const btnTambah = document.getElementById("btn-tambah");
 const errorEl = document.getElementById("error");
 const daftar = document.getElementById("daftar-tugas");
 const counterEl = document.getElementById("counter");
@@ -109,8 +110,9 @@ function isiMatkul(daftarMatkul) {
   selectMatkul.value = pilih;
 }
 
-// Langkah 3 — form: submit + preventDefault, validasi, pesan error di halaman.
-form.addEventListener("submit", (e) => {
+// Langkah v2-3 — form → POST /api/tugas (header & body JSON).
+// Tombol nonaktif selama mengirim; error server (400) tampil di halaman.
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const judul = inputJudul.value.trim();
   const deadline = inputDeadline.value;
@@ -125,16 +127,21 @@ form.addEventListener("submit", (e) => {
   }
   errorEl.textContent = "";
 
-  tugas.push({
-    id: String(Date.now()),
-    judul,
-    matkul: selectMatkul.value,
-    deadline,
-    selesai: false,
-  });
-  form.reset();
-  inputJudul.focus();
-  render();
+  btnTambah.disabled = true;
+  try {
+    const dibuat = await api("/tugas", {
+      method: "POST",
+      body: JSON.stringify({ judul, matkul: selectMatkul.value, deadline }),
+    });
+    tugas.push(dibuat);
+    form.reset();
+    inputJudul.focus();
+    render();
+  } catch (err) {
+    errorEl.textContent = err.message;
+  } finally {
+    btnTambah.disabled = false;
+  }
 });
 
 // Langkah 4 — delegation: checkbox + hapus ditangani di <ul> (berlaku untuk item baru).
