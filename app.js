@@ -12,18 +12,25 @@ const counterEl = document.getElementById("counter");
 const kosongEl = document.getElementById("kosong");
 const filterBtns = document.querySelectorAll("[data-filter]");
 
-const KEY = "task-tracker-tugas";
-let tugas = []; // {id, judul, matkul, deadline, selesai}
-try {
-  tugas = JSON.parse(localStorage.getItem(KEY)) || [];
-} catch {
-  tugas = [];
+// Langkah v2-1 — api(): helper fetch JSON yang melempar Error berisi pesan server.
+async function api(path, options = {}) {
+  let res;
+  try {
+    res = await fetch("/api" + path, {
+      headers: { "Content-Type": "application/json" },
+      ...options,
+    });
+  } catch {
+    throw new Error("Tidak dapat menghubungi server. Periksa koneksi lalu coba lagi.");
+  }
+  if (res.status === 204) return null;
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || `Server merespons ${res.status}.`);
+  return data;
 }
-let filter = "semua";
 
-function save() {
-  localStorage.setItem(KEY, JSON.stringify(tugas));
-}
+let tugas = []; // {id, judul, matkul, deadline, selesai}, sumber: server
+let filter = "semua";
 
 // Langkah 2 — render: satu-satunya fungsi pembangun tampilan (textContent, aman dari XSS).
 // Langkah 5 — filter + urut deadline terdekat + counter + pesan kosong.
@@ -91,7 +98,6 @@ form.addEventListener("submit", (e) => {
   });
   form.reset();
   inputJudul.focus();
-  save();
   render();
 });
 
@@ -102,7 +108,6 @@ daftar.addEventListener("change", (e) => {
   const item = tugas.find((t) => t.id === id);
   if (item) {
     item.selesai = e.target.checked;
-    save();
     render();
   }
 });
@@ -111,7 +116,6 @@ daftar.addEventListener("click", (e) => {
   const btn = e.target.closest(".hapus");
   if (!btn) return;
   tugas = tugas.filter((t) => t.id !== btn.dataset.id);
-  save();
   render();
 });
 
@@ -123,4 +127,14 @@ filterBtns.forEach((b) =>
   })
 );
 
-render();
+// Langkah v2-1 — muat dari server saat halaman dibuka.
+async function muatAwal() {
+  try {
+    tugas = await api("/tugas");
+  } catch (err) {
+    errorEl.textContent = err.message;
+  }
+  render();
+}
+
+muatAwal();
