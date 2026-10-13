@@ -55,6 +55,9 @@ button:disabled { background: #999; cursor: wait; }
 .filters { display: flex; gap: 8px; }
 .filters button { background: #e0e0e0; color: #333; }
 .filters button.on { background: #0066cc; color: #fff; }
+.modes { display: flex; gap: 8px; align-items: center; margin: 0 0 8px; font-size: 14px; }
+.modes button { background: #e0e0e0; color: #333; padding: 6px 10px; }
+.modes button.on { background: #0066cc; color: #fff; }
 ul { list-style: none; padding: 0; margin: 0; }
 li {
   display: flex;

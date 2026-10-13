@@ -16,6 +16,7 @@ const errorMuatEl = document.getElementById("error-muat");
 const pesanMuatEl = document.getElementById("pesan-muat");
 const btnCobaLagi = document.getElementById("btn-coba-lagi");
 const filterBtns = document.querySelectorAll("[data-filter]");
+const modeBtns = document.querySelectorAll("[data-mode]");
 
 // Langkah v2-1 — api(): helper fetch JSON yang melempar Error berisi pesan server.
 async function api(path, options = {}) {
@@ -202,5 +203,15 @@ async function muat() {
 }
 
 btnCobaLagi.addEventListener("click", muat);
+
+// Langkah v2-5 — ganti mode jaringan (__API.setMode) lalu muat ulang.
+// Semua alur async sudah try/catch: tidak ada unhandled rejection di Console.
+modeBtns.forEach((b) =>
+  b.addEventListener("click", () => {
+    if (window.__API) window.__API.setMode(b.dataset.mode);
+    modeBtns.forEach((x) => x.classList.toggle("on", x === b));
+    muat();
+  })
+);
 
 muat();
