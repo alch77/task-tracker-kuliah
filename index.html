@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Tracker Kuliah</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Task Tracker Kuliah</h1>
+
+    <form id="form-tambah">
+      <div class="field">
+        <label for="judul">Judul tugas</label>
+        <input type="text" id="judul" placeholder="cth: Laporan praktikum 3" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="matkul">Mata kuliah</label>
+        <input type="text" id="matkul" placeholder="cth: Pemrograman Web" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="deadline">Deadline</label>
+        <input type="date" id="deadline">
+      </div>
+      <p id="error" class="error" aria-live="polite"></p>
+      <button type="submit">Tambah tugas</button>
+    </form>
+
+    <div class="toolbar">
+      <div class="filters">
+        <button type="button" data-filter="semua" class="on">Semua</button>
+        <button type="button" data-filter="aktif">Aktif</button>
+        <button type="button" data-filter="selesai">Selesai</button>
+      </div>
+      <p id="counter">0 tugas aktif</p>
+    </div>
+
+    <ul id="daftar-tugas"></ul>
+    <p id="kosong">Belum ada tugas. Tambahkan tugas kuliahmu di atas.</p>
+  </main>
+</body>
+</html>
