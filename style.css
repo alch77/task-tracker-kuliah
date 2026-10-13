@@ -15,12 +15,13 @@ form {
 }
 .field { margin-bottom: 12px; }
 label { display: block; font-weight: bold; margin-bottom: 4px; }
-input {
+input[type="text"], input[type="date"] {
   width: 100%;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+li input[type="checkbox"] { width: auto; flex-shrink: 0; }
 button {
   background: #0066cc;
   color: #fff;
