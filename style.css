@@ -15,7 +15,7 @@ form {
 }
 .field { margin-bottom: 12px; }
 label { display: block; font-weight: bold; margin-bottom: 4px; }
-input[type="text"], input[type="date"], select {
+input[type="text"], input[type="date"], input[type="search"], select {
   width: 100%;
   padding: 8px;
   border: 1px solid #ccc;

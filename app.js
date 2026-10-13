@@ -1,5 +1,5 @@
 // Deklarasi Tugas 1: dibuat dengan bantuan AI, diverifikasi manual.
-// Langkah 1 — struktur: referensi elemen + state dasar.
+// Deklarasi Tugas 1 v2: dibuat dengan bantuan AI, diverifikasi manual (lihat AI_LOG.md).
 "use strict";
 
 const form = document.getElementById("form-tambah");
@@ -7,6 +7,7 @@ const inputJudul = document.getElementById("judul");
 const selectMatkul = document.getElementById("matkul");
 const inputDeadline = document.getElementById("deadline");
 const btnTambah = document.getElementById("btn-tambah");
+const inputCari = document.getElementById("cari");
 const errorEl = document.getElementById("error");
 const daftar = document.getElementById("daftar-tugas");
 const counterEl = document.getElementById("counter");
@@ -37,6 +38,7 @@ async function api(path, options = {}) {
 
 let tugas = []; // {id, judul, matkul, deadline, selesai}, sumber: server
 let filter = "semua";
+let cari = "";
 let status = "loading"; // loading | siap | error
 let pesanMuat = "";
 
@@ -59,6 +61,12 @@ function render() {
   } else if (status === "siap") {
     tampil = tugas
       .filter((t) => filter === "semua" || (filter === "aktif" ? !t.selesai : t.selesai))
+      .filter(
+        (t) =>
+          !cari ||
+          t.judul.toLowerCase().includes(cari) ||
+          (t.matkul || "").toLowerCase().includes(cari)
+      )
       .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
     for (const t of tampil) {
     const li = document.createElement("li");
@@ -146,35 +154,53 @@ form.addEventListener("submit", async (e) => {
 });
 
 // Langkah v2-4 — delegation: PATCH selesai & DELETE (204) lewat <ul>.
-// State diperbarui dari respons server, lalu render().
+// Bonus optimistic update: tampilan berubah dulu, dibatalkan bila server gagal.
 daftar.addEventListener("change", async (e) => {
   const id = e.target.dataset.id;
   if (e.target.type !== "checkbox" || !id) return;
   const item = tugas.find((t) => t.id === id);
   if (!item) return;
+  const semula = item.selesai;
+  item.selesai = e.target.checked;
+  render();
   try {
     const baru = await api(`/tugas/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ selesai: e.target.checked }),
+      body: JSON.stringify({ selesai: item.selesai }),
     });
     Object.assign(item, baru);
-    render();
   } catch (err) {
+    item.selesai = semula;
     errorEl.textContent = err.message;
-    render();
   }
+  render();
 });
 
 daftar.addEventListener("click", async (e) => {
   const btn = e.target.closest(".hapus");
   if (!btn) return;
+  const id = btn.dataset.id;
+  const idx = tugas.findIndex((t) => t.id === id);
+  if (idx < 0) return;
+  const [lepas] = tugas.splice(idx, 1);
+  render();
   try {
-    await api(`/tugas/${btn.dataset.id}`, { method: "DELETE" });
-    tugas = tugas.filter((t) => t.id !== btn.dataset.id);
-    render();
+    await api(`/tugas/${id}`, { method: "DELETE" });
   } catch (err) {
+    tugas.splice(Math.min(idx, tugas.length), 0, lepas);
     errorEl.textContent = err.message;
   }
+  render();
+});
+
+// Bonus — pencarian dengan debounce 300ms.
+let timerCari;
+inputCari.addEventListener("input", () => {
+  clearTimeout(timerCari);
+  timerCari = setTimeout(() => {
+    cari = inputCari.value.trim().toLowerCase();
+    render();
+  }, 300);
 });
 
 // Langkah 5 — filter Semua/Aktif/Selesai, tombol aktif berkelaas on.
