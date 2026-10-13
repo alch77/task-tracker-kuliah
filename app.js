@@ -79,3 +79,21 @@ form.addEventListener("submit", (e) => {
   inputJudul.focus();
   render();
 });
+
+// Langkah 4 — delegation: checkbox + hapus ditangani di <ul> (berlaku untuk item baru).
+daftar.addEventListener("change", (e) => {
+  const id = e.target.dataset.id;
+  if (e.target.type !== "checkbox" || !id) return;
+  const item = tugas.find((t) => t.id === id);
+  if (item) {
+    item.selesai = e.target.checked;
+    render();
+  }
+});
+
+daftar.addEventListener("click", (e) => {
+  const btn = e.target.closest(".hapus");
+  if (!btn) return;
+  tugas = tugas.filter((t) => t.id !== btn.dataset.id);
+  render();
+});
